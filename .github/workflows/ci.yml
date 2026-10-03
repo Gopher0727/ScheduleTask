@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go:
+    name: Go (${{ matrix.go }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ['1.26.2', stable]
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: scheduletask
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: schedule_task
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U scheduletask -d schedule_task"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      SCHEDULETASK_TEST_POSTGRES_DSN: 'host=localhost user=scheduletask password=test dbname=schedule_task port=5432 sslmode=disable'
+      SCHEDULETASK_TEST_REDIS_ADDR: localhost:6379
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: Verify module integrity and tidiness
+        run: |
+          go mod verify
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+      - name: Format, vet and integration tests
+        run: make check
+      - name: Build binary
+        run: make build
+
+  container:
+    name: Compose smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Validate Compose and build image
+        run: |
+          docker compose --profile demo config --quiet
+          docker compose --profile demo build
+      - name: Start stack and verify callback lifecycle
+        run: |
+          docker compose --profile demo up -d --wait
+          python3 scripts/smoke.py --callback-url http://callback:9090/callback
+      - name: Show stack logs
+        if: always()
+        run: docker compose --profile demo logs --no-color
+      - name: Stop stack
+        if: always()
+        run: docker compose --profile demo down -v

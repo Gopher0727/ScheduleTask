@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible correctness or operational problem
+title: '[Bug]: '
+body:
+  - type: markdown
+    attributes:
+      value: 'For sensitive vulnerabilities, follow SECURITY.md instead of this public form.'
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Include cron, deployment mode and config with secrets removed.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and relevant logs
+      description: Remove credentials, callback tokens and private payloads.
+    validations:
+      required: true

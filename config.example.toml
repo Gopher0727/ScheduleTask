@@ -1,0 +1,26 @@
+# Local development: PostgreSQL + Redis from docker compose.
+port = 8082
+
+[postgres]
+dsn = "host=localhost user=scheduletask password=scheduletask dbname=schedule_task port=5432 sslmode=disable"
+max_open_conns = 30
+max_idle_conns = 10
+
+[redis]
+addr = "localhost:6379"
+password = "scheduletask"
+db = 0
+pool_size = 10
+
+[scheduler]
+bucket_num = 5
+try_lock_seconds = 70
+success_expire_seconds = 100
+
+[trigger]
+zrange_gap_seconds = 1
+
+[migrator]
+# Materialize twice this window ahead; scans run at startup and every minute.
+migrate_step_minutes = 5
+try_lock_minutes = 2

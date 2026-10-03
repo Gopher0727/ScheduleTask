@@ -1,0 +1,9 @@
+.vscode/
+.idea/
+.DS_Store
+/config.toml
+/.env
+/bin/
+/coverage.out
+*.log
+/.superpowers/

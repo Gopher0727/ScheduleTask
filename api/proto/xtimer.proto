@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package xtimer;
+
+option go_package = "./pb";
+
+service XTimer {
+  rpc CreateTimer(CreateTimerReq) returns (CreateTimerResp);
+  rpc EnableTimer(EnableTimerReq) returns (EnableTimerResp);
+  rpc GetTimer(GetTimerReq) returns (GetTimerResp);
+}
+
+message CreateTimerReq {
+  string app = 1;
+  string name = 2;
+  string cron = 3;
+  NotifyHTTPParam notify_http_param = 4;
+}
+
+message CreateTimerResp {
+  int64 timer_id = 1;
+}
+
+message EnableTimerReq {
+  string app = 1;
+  int64 timer_id = 2;
+  int32 status = 3;
+}
+
+message EnableTimerResp {}
+
+message GetTimerReq {
+  int64 timer_id = 1;
+}
+
+message GetTimerResp {
+  int64 timer_id = 1;
+  string app = 2;
+  string name = 3;
+  int32 status = 4;
+  string cron = 5;
+  NotifyHTTPParam notify_http_param = 6;
+}
+
+message NotifyHTTPParam {
+  string method = 1;
+  string url = 2;
+  map<string, string> header = 3;
+  string body = 4;
+}

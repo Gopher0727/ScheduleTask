@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security reporting
+    url: https://github.com/Gopher0727/ScheduleTask/security/advisories/new
+    about: Use private reporting when enabled; otherwise follow SECURITY.md.
